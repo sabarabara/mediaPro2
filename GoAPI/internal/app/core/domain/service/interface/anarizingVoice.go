@@ -1,8 +1,10 @@
 package abstract
 
-import(
-	"GoAPI/internal/app/core/dto"
+import (
+    "GoAPI/internal/app/core/dto"
+    "GoAPI/internal/app/core/domain/model/vo"
 )
+
 type AnalyzingVoiceService interface {
-	AnalyzingVoiceService(voiceDataDTO dto.VoiceDataDTO) (string, error)
+    AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.ChattingInformation, error)
 }

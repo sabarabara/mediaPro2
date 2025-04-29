@@ -11,22 +11,24 @@ func NewChattingInformationFactory() factory.ChattingInformationFactory {
 	return &ChattingInformationFactoryImpl{}
 }
 
-// CreateChattingInformation メソッドを実装
+
 func (c *ChattingInformationFactoryImpl) CreateChattingInformation(talkingText vo.TalkingText, emotionalParam vo.ImotionalParam) (vo.ChattingInformation, error) {
+
 	// ImotionalParam のバリデーション
-	emoParam, err := emotionalParam.NewImotionalParam()
+	emoParam, err := vo.NewImotionalParam(emotionalParam.Value())
 	if err != nil {
 		return vo.ChattingInformation{}, err
 	}
 
 	// TalkingTextのバリデーション(仮)
-	//talkingText = talkingText;
+	talkingTextVo, err := vo.NewTalkingText(talkingText.Value())
+    if err != nil {
+    return vo.ChattingInformation{}, err
+   }
 
-
-	
 	// ChattingInformationの生成
 	return vo.ChattingInformation{
-		TalkingText:    talkingText,
+		TalkingText:    talkingTextVo,
 		ImotionalParam: emoParam,
 	}, nil
 }

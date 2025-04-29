@@ -1,9 +1,10 @@
 package abstract
 
-import(
+import (
 	"GoAPI/internal/app/core/domain/model/vo"
+	"GoAPI/internal/app/core/dto"
 )
 
 type CreateVoiceService interface {
-	CreateVoice(talkingText vo.TalkingText, emotionalParam vo.ImotionalParam) (vo.ChattingInformation, error)
+	CreateVoice(vo.ChattingInformation) (dto.VoiceDataDTO, error)
 }

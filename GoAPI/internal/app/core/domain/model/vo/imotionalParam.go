@@ -5,22 +5,26 @@ import (
 	"strings"
 )
 
-type ImotionalParam string
+type ImotionalParam struct {
+	value string
+}
 
-// バリデーション関数と感情の返却
-func (i *ImotionalParam) NewImotionalParam() (ImotionalParam, error) {
-	// Google Colabで帰ってくる感情の種類（例）
+func (e ImotionalParam) Value() string {
+	return e.value
+}
+
+// 正しいコンストラクタ
+func NewImotionalParam(value string) (ImotionalParam, error) {
 	allowedEmotions := []string{
 		"joy", "sadness", "anger", "fear", "surprise", "disgust", "neutral",
 	}
 
 	// 感情が許可されたリストに含まれているかチェック
 	for _, emotion := range allowedEmotions {
-		if strings.ToLower(string(*i)) == emotion {
-			return *i, nil // 有効な感情を返す
+		if strings.ToLower(value) == emotion {
+			return ImotionalParam{value: value}, nil
 		}
 	}
 
-	// 無効な感情の場合はエラーを返す
-	return "", errors.New("invalid emotion: " + string(*i))
+	return ImotionalParam{}, errors.New("invalid emotion: " + value)
 }

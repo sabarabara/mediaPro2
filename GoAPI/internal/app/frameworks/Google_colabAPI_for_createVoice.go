@@ -1,2 +1,59 @@
 package frameworks
 
+import (
+    "GoAPI/internal/app/core/domain/model/vo"
+    "GoAPI/internal/app/core/domain/service/interface"
+    "GoAPI/internal/app/core/dto"
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+type VoiceCreater struct{}
+
+// インターフェースを満たす
+var _ abstract.CreateVoiceService = (*VoiceCreater)(nil)
+
+func (v *VoiceCreater) CreateVoice(chattingInfo vo.ChattingInformation) (dto.VoiceDataDTO, error) {
+    // 例として、ChattingInformationを使ってリクエストを生成
+    text := chattingInfo.TalkingText.Value()  // ここでTalkingTextを取得
+    emotion := chattingInfo.ImotionalParam.Value()  // ここでImotionalParamを取得
+
+    // createVoiceエンドポイントのURL
+    url := "http://localhost:5000/createVoice"
+
+    // リクエストデータをJSONに変換
+    data := map[string]string{
+        "text":    text,
+        "emotion": emotion,
+    }
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        return dto.VoiceDataDTO{}, err
+    }
+
+    // POSTリクエストの送信
+    resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        return dto.VoiceDataDTO{}, err
+    }
+    defer resp.Body.Close()
+
+    // レスポンスコードチェック
+    if resp.StatusCode != http.StatusOK {
+        return dto.VoiceDataDTO{}, fmt.Errorf("failed to create voice, status code: %d", resp.StatusCode)
+    }
+
+    // レスポンスデータを読み取り
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return dto.VoiceDataDTO{}, err
+    }
+
+    // 音声データをVoiceDataDTOに格納して返す
+    return dto.VoiceDataDTO{
+        AudioData: body, // ここでレスポンスの音声データを返す
+    }, nil
+}
