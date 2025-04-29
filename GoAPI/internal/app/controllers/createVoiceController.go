@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"log"
-	"net/http"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"net/http"
 
 	"GoAPI/internal/app/core/domain/service/interface"
 	"GoAPI/internal/app/core/dto"
@@ -12,6 +13,7 @@ import (
 type CreateVoiceController struct {
 	creatingVoiceService abstract.CreateVoiceUsecase
 }
+
 func NewCreateVoiceController(creatingVoiceService abstract.CreateVoiceUsecase) *CreateVoiceController {
 	return &CreateVoiceController{
 		creatingVoiceService: creatingVoiceService,
@@ -26,9 +28,9 @@ var upgrader = websocket.Upgrader{
 }
 
 // WebSocket接続を処理するハンドラ
-func (c *CreateVoiceController) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
 	// WebSocket接続のアップグレード
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println("Error upgrading connection:", err)
 		return
@@ -50,7 +52,11 @@ func (c *CreateVoiceController) HandleWebSocket(w http.ResponseWriter, r *http.R
 		}
 
 		// 音声データをサービスで処理
-		c.creatingVoiceService.CreatVoice(voiceDataDTO)
+		err = c.creatingVoiceService.CreatVoice(voiceDataDTO)
+		if err != nil {
+			log.Println("Error processing voice data:", err)
+			return
+		}
 
 		// 成功した場合のレスポンス
 		err = conn.WriteMessage(websocket.TextMessage, []byte("Voice processed successfully"))
@@ -60,3 +66,4 @@ func (c *CreateVoiceController) HandleWebSocket(w http.ResponseWriter, r *http.R
 		}
 	}
 }
+

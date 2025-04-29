@@ -1,53 +1,28 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
-	
+	"github.com/joho/godotenv"
+	"GoAPI/internal/app/di"
 )
 
+func init() {
+	// .env ファイルの読み込み
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// 必要な環境変数がセットされているかチェック
+	if os.Getenv("Gemini_API_URL") == "" || os.Getenv("GEMINI_API_KEY") == "" {
+		log.Fatal("Gemini API URL or API Key is not set")
+	}
+}
+
 func main() {
+	// wire で依存関係を解決してコントローラーを生成
+	r := di.InitializeRouter()
 
-	//routing,middleware setting
-	r := di.InitializeRouter(db)
-
-	r.Use(
-		middleware.LoggerGin(),
-		middleware.RecoverGin(),
-		middleware.ContextGin(),
-		cors.Default(),
-	)
-
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
-	log.Println("Server started on :8080")
-
-	//shutting setting
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, os.Interrupt)
-	<-quit
-
-	log.Println("Shutting down server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		slog.Error("Server forced to shutdown", "error", err.Error())
-	} else {
-		slog.Info("Server shutdown gracefully")
-	}
+	// サーバーを開始
+	r.Run(":8080")
 }

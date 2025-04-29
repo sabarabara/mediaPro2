@@ -61,6 +61,10 @@ type GeminiResponse struct {
 // GeminiRequesterがCreateChattingInformationインターフェースを満たす
 var _ abstract.CreateChattingInformation = (*GeminiRequester)(nil)
 
+func NewGeminiRequester() abstract.CreateChattingInformation {
+    return &GeminiRequester{}
+}
+
 func (g *GeminiRequester) CreateChattingInformation(talkingText vo.TalkingText, emotionalParam vo.ImotionalParam) (vo.ChattingInformation, error) {
     prompt := "次のテキストと感情に基づいて、彼女のような話し方で、似た雰囲気のテキストを生成してください。\n\n" +
         "テキスト: " + talkingText.Value() + "\n" +

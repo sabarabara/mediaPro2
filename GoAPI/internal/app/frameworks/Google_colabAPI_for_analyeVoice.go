@@ -21,6 +21,10 @@ type VoiceAnalyzer struct{}
 
 var _ abstract.AnalyzingVoiceService = (*VoiceAnalyzer)(nil)
 
+func NewAnalyzingVoiceService() abstract.AnalyzingVoiceService {
+    return &VoiceAnalyzer{}
+}
+
 func (v *VoiceAnalyzer) AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.ChattingInformation, error) {
     // Flaskサーバー叩いて、vo.ChattingInformationを作る処理
     // 1. ファイルをmultipart/form-dataで送る

@@ -16,6 +16,10 @@ type VoiceCreater struct{}
 // インターフェースを満たす
 var _ abstract.CreateVoiceService = (*VoiceCreater)(nil)
 
+func NewCreateVoiceService() abstract.CreateVoiceService {
+    return &VoiceCreater{}
+}
+
 func (v *VoiceCreater) CreateVoice(chattingInfo vo.ChattingInformation) (dto.VoiceDataDTO, error) {
     // 例として、ChattingInformationを使ってリクエストを生成
     text := chattingInfo.TalkingText.Value()  // ここでTalkingTextを取得
