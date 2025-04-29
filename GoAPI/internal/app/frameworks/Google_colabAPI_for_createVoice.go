@@ -9,7 +9,20 @@ import (
     "fmt"
     "io"
     "net/http"
+    "os"
+    "github.com/joho/godotenv"
 )
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+			panic("Error loading .env file")
+	}
+}
+
+
+// FlaskサーバーのURL
+var flaskServerURL2 = os.Getenv("Python_API_PORT_FOR_CREATE")
+
 
 type VoiceCreater struct{}
 
@@ -26,7 +39,7 @@ func (v *VoiceCreater) CreateVoice(chattingInfo vo.ChattingInformation) (dto.Voi
     emotion := chattingInfo.ImotionalParam.Value()  // ここでImotionalParamを取得
 
     // createVoiceエンドポイントのURL
-    url := "http://localhost:5000/createVoice"
+    url := flaskServerURL2
 
     // リクエストデータをJSONに変換
     data := map[string]string{

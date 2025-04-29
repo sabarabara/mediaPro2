@@ -1,3 +1,13 @@
+# ========================
+# 仮想環境の構築手順（メモ）
+# ========================
+# python3 -m venv new_venv
+# source new_venv/bin/activate
+# pip install -r requirements.txt
+# ========================
+
+
+
 from flask import Flask, request, jsonify
 import whisper
 import numpy as np
@@ -59,3 +69,4 @@ def analyze_voice():
 
 if __name__ == '__main__':
     app.run(debug=True)
+

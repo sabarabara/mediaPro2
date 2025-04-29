@@ -1,22 +1,23 @@
 package controllers
 
 import (
+	abstract "GoAPI/internal/app/core/domain/service/interface"
+	"GoAPI/internal/app/core/dto"
+	"encoding/json"
 	"log"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"net/http"
 
-	"GoAPI/internal/app/core/domain/service/interface"
-	"GoAPI/internal/app/core/dto"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type CreateVoiceController struct {
-	creatingVoiceService abstract.CreateVoiceUsecase
+	creatingVoiceUsecase abstract.CreateVoiceUsecase
 }
 
-func NewCreateVoiceController(creatingVoiceService abstract.CreateVoiceUsecase) *CreateVoiceController {
+func NewCreateVoiceController(creatingVoiceUsecase abstract.CreateVoiceUsecase) *CreateVoiceController {
 	return &CreateVoiceController{
-		creatingVoiceService: creatingVoiceService,
+		creatingVoiceUsecase: creatingVoiceUsecase,
 	}
 }
 
@@ -47,23 +48,34 @@ func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
 			return
 		}
 
+		log.Println("Received message:")
+
 		voiceDataDTO := dto.VoiceDataDTO{
-			AudioData: msg, // 受け取った音声データを設定
+			AudioData: msg, //
+			//  受け取った音声データを設定
 		}
 
+		log.Println("Received voice data:")
+
 		// 音声データをサービスで処理
-		err = c.creatingVoiceService.CreatVoice(voiceDataDTO)
+		resAudioData, err := c.creatingVoiceUsecase.CreatVoice(voiceDataDTO)
 		if err != nil {
 			log.Println("Error processing voice data:", err)
 			return
 		}
 
-		// 成功した場合のレスポンス
-		err = conn.WriteMessage(websocket.TextMessage, []byte("Voice processed successfully"))
+		// 構造体をJSONに変換
+		jsonData, err := json.Marshal(resAudioData)
+		if err != nil {
+			log.Println("Error marshalling response:", err)
+			return
+		}
+
+		// クライアントへ送信（JSON文字列）
+		err = conn.WriteMessage(websocket.TextMessage, jsonData)
 		if err != nil {
 			log.Println("Error sending response:", err)
 			return
 		}
 	}
 }
-

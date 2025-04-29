@@ -5,5 +5,5 @@ import(
 )
 
 type CreateVoiceUsecase interface {
-	CreatVoice(voiceDataDTO dto.VoiceDataDTO) error
+	CreatVoice(voiceDataDTO dto.VoiceDataDTO)(dto.VoiceDataDTO , error)
 }

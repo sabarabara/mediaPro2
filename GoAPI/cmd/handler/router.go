@@ -6,6 +6,7 @@ import (
 	"GoAPI/internal/app/controllers"
 )
 
+
 func SetupRouter(controller *controllers.CreateVoiceController) *gin.Engine {
 	r := gin.Default()
 

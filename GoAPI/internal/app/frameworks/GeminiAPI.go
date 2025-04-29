@@ -19,14 +19,14 @@ func init() {
 			panic("Error loading .env file")
 	}
 
-	if os.Getenv("Gemini_API_URL") == "" || os.Getenv("GEMINI_API_KEY") == "" {
+	if os.Getenv("Gemini_API_URL") == "" || os.Getenv("Gemini_API_KEY") == "" {
 			panic("Gemini API URL or API Key is not set")
 	}
 }
 
 
 var geminiURL = os.Getenv("Gemini_API_URL")
-var geminiAPIKey = os.Getenv("GEMINI_API_KEY")
+var geminiAPIKey = os.Getenv("Gemini_API_KEY")
 
 
 type GeminiRequester struct{}

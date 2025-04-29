@@ -8,14 +8,23 @@ import (
     "io"
     "encoding/json"
     "errors"
+    "github.com/joho/godotenv"
 
     "GoAPI/internal/app/core/dto"
     "GoAPI/internal/app/core/domain/model/vo"
     "GoAPI/internal/app/core/domain/service/interface"
 )
 
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+			panic("Error loading .env file")
+	}
+}
+
+
 // FlaskサーバーのURL
-var flaskServerURL = os.Getenv("FLASK_SERVER_URL") // 例: "http://localhost:5000/analyzeVoice"
+var flaskServerURL = os.Getenv("Python_API_PORT_FOR_ANALIZE") // 例: "http://localhost:5000/analyzeVoice"
 
 type VoiceAnalyzer struct{}
 
