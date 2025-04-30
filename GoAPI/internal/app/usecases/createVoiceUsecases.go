@@ -29,12 +29,13 @@ func NewCreateVoiceUsecaseImpl(
 
 func (c *CreateVoiceUsecaseImpl) CreateVoice(voiceDataDTO dto.VoiceDataDTO) (*dto.VoiceDataDTO, error) {
 
+	println(0)
 	// 1. Analyze the voice data
 	analyzedData, err := c.analyzeVoiceService.AnalyzeVoice(voiceDataDTO)
 	if err != nil {
 		return nil, err
 	}
-
+	println(1)
 	// 2. Use Factory to create ChattingInformation domain object
 	chattingInformation, err := c.chattingInformationFactory.CreateChattingInformation(
 		analyzedData.TalkingText,
@@ -43,18 +44,19 @@ func (c *CreateVoiceUsecaseImpl) CreateVoice(voiceDataDTO dto.VoiceDataDTO) (*dt
 	if err != nil {
 		return nil, err
 	}
-
+	println(2)
 	// 3. Save ChattingInformation
 	responseChattingInformation, err := c.createChattingInformationService.CreateChattingInformation(chattingInformation.TalkingText, chattingInformation.ImotionalParam)
 	if err != nil {
 		return nil, err
 	}
-
+	println(3)
 	// 4. Create the voice (WAV) from ChattingInformation
 	audioData, err := c.createVoiceService.CreateVoice(responseChattingInformation)
 	if err != nil {
 		return nil, err
 	}
+	println(4)
 
 	return &audioData, nil
 }

@@ -16,15 +16,17 @@ import (
 )
 
 
+var flaskServerURL string
+
 func init() {
-	if err := godotenv.Load(); err != nil {
-			panic("Error loading .env file")
-	}
+    if err := godotenv.Load(); err != nil {
+        panic("Error loading .env file")
+    }
+    flaskServerURL = os.Getenv("Python_API_PORT_FOR_ANALIZE")
 }
 
 
-// FlaskサーバーのURL
-var flaskServerURL = os.Getenv("Python_API_PORT_FOR_ANALIZE") // 例: "http://localhost:5000/analyzeVoice"
+
 
 type VoiceAnalyzer struct{}
 
@@ -37,6 +39,7 @@ func NewAnalyzingVoiceService() abstract.AnalyzingVoiceService {
 func (v *VoiceAnalyzer) AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.ChattingInformation, error) {
     // Flaskサーバー叩いて、vo.ChattingInformationを作る処理
     // 1. ファイルをmultipart/form-dataで送る
+    println("0-1")
     body := &bytes.Buffer{}
     writer := multipart.NewWriter(body)
     part, err := writer.CreateFormFile("file", "audio.wav")
@@ -48,7 +51,7 @@ func (v *VoiceAnalyzer) AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.Chatting
         return vo.ChattingInformation{}, err
     }
     writer.Close()
-
+    println("0-2")
     req, err := http.NewRequest("POST", flaskServerURL, body)
     if err != nil {
         return vo.ChattingInformation{}, err
