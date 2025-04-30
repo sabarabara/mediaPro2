@@ -3,6 +3,7 @@ package di
 import (
 	handlers "GoAPI/cmd/handler"
 	"GoAPI/internal/app/controllers"
+	"GoAPI/internal/app/core/domain/service/interface"
 	"GoAPI/internal/app/frameworks"
 	"GoAPI/internal/app/usecases"
 
@@ -10,18 +11,25 @@ import (
 	"github.com/google/wire"
 )
 
+var OKcreateVoiceUsecaseSet = wire.NewSet(
+	usecases.NewCreateVoiceUsecaseImpl,
+	wire.Bind(new(abstract.CreateVoiceUsecase), new(*usecases.CreateVoiceUsecaseImpl)),
+)
 
-func InitializeRouter() *gin.Engine {
+var OKfactorySet = wire.NewSet(
+	usecases.NewChattingInformationFactory,
+)
 
+
+func OKInitializeRouter() *gin.Engine {
 	wire.Build(
-
 		handlers.SetupRouter,
 		controllers.NewCreateVoiceController,
-		usecases.NewCreateVoiceUsecaseImpl,
 		frameworks.NewGeminiRequester,
 		frameworks.NewCreateVoiceService,
 		frameworks.NewAnalyzingVoiceService,
-
+		createVoiceUsecaseSet,
+		factorySet, 
 	)
 
 	return handlers.SetupRouter(nil)

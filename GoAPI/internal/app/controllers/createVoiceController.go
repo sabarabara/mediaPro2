@@ -58,7 +58,7 @@ func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
 		log.Println("Received voice data:")
 
 		// 音声データをサービスで処理
-		resAudioData, err := c.creatingVoiceUsecase.CreatVoice(voiceDataDTO)
+		resAudioData, err := c.creatingVoiceUsecase.CreateVoice(voiceDataDTO)
 		if err != nil {
 			log.Println("Error processing voice data:", err)
 			return
