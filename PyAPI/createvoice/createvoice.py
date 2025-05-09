@@ -16,10 +16,14 @@ def create_voice(talking_text: str, emotional_param: str) -> BytesIO:
     #    stdin: mp3_buf、 stdout: wav_buf
     wav_buf = BytesIO()
     ffmpeg_cmd = [
-        'ffmpeg', '-i', 'pipe:0',    # 標準入力から読む
-        '-f', 'wav',                 # フォーマット WAV
-        'pipe:1'                     # 標準出力へ書く
-    ]
+    'ffmpeg', '-i', 'pipe:0',  # 標準入力
+    '-f', 'wav',               # WAV形式
+    '-acodec', 'pcm_s16le',    # ★16bitリトルエンディアンPCMにする（ブラウザ対応）
+    '-ar', '44100',            # ★サンプリングレート44100Hz（一般的）
+    '-ac', '2',                # ★2チャンネル（ステレオ）
+    'pipe:1'                   # 標準出力
+]
+
     proc = subprocess.run(
         ffmpeg_cmd,
         input=mp3_buf.read(),

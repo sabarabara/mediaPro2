@@ -10,7 +10,7 @@ const Home = () => {
 
   // WebSocket接続を確立
   const connectWebSocket = () => {
-    const socket = new WebSocket('ws//localhost:8080/ws'); // WebSocketのURLを調整
+    const socket = new WebSocket('//localhost:8080/ws'); // WebSocketのURLを調整
     socket.binaryType = "arraybuffer"; // 重要！！ バイナリデータを受信できるようにする
 
     socket.onopen = () => {

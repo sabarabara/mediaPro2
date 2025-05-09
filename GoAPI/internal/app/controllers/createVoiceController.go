@@ -3,7 +3,6 @@ package controllers
 import (
 	abstract "GoAPI/internal/app/core/domain/service/interface"
 	"GoAPI/internal/app/core/dto"
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -41,41 +40,27 @@ func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
 
 	// 音声データの受信と処理
 	for {
-		// メッセージを受信（音声データ）
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("Error reading message:", err)
-			return
-		}
+    _, msg, err := conn.ReadMessage()
+    if err != nil {
+        log.Println("Error reading message:", err)
+        return
+    }
 
-		log.Println("Received message:")
+    voiceDataDTO := dto.VoiceDataDTO{
+        AudioData: msg,
+    }
 
-		voiceDataDTO := dto.VoiceDataDTO{
-			AudioData: msg, //
-			//  受け取った音声データを設定
-		}
+    resAudioData, err := c.creatingVoiceUsecase.CreateVoice(voiceDataDTO)
+    if err != nil {
+        log.Println("Error processing voice data:", err)
+        return
+    }
 
-		log.Println("Received voice data:")
-
-		// 音声データをサービスで処理
-		resAudioData, err := c.creatingVoiceUsecase.CreateVoice(voiceDataDTO)
-		if err != nil {
-			log.Println("Error processing voice data:", err)
-			return
-		}
-
-		// 構造体をJSONに変換
-		jsonData, err := json.Marshal(resAudioData)
-		if err != nil {
-			log.Println("Error marshalling response:", err)
-			return
-		}
-
-		// クライアントへ送信（JSON文字列）
-		err = conn.WriteMessage(websocket.TextMessage, jsonData)
-		if err != nil {
-			log.Println("Error sending response:", err)
-			return
-		}
-	}
+    // ★ JSONじゃなくてバイナリ送信 ★
+    err = conn.WriteMessage(websocket.BinaryMessage, resAudioData.AudioData)
+    if err != nil {
+        log.Println("Error sending response:", err)
+        return
+    }
+}
 }
