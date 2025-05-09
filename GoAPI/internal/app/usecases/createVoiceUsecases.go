@@ -60,7 +60,7 @@ func (c *CreateVoiceUsecaseImpl) CreateVoice(voiceDataDTO dto.VoiceDataDTO) (*dt
 		return nil, err
 	}
 	println(4)
-	fmt.Println("audioData", audioData);
+	//fmt.Println("audioData", audioData);
 
 	return &audioData, nil
 }

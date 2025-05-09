@@ -9,13 +9,16 @@ import (
     "os"
 
     "GoAPI/internal/app/core/domain/model/vo"
-		"GoAPI/internal/app/core/domain/service/interface"
+	"GoAPI/internal/app/core/domain/service/interface"
+    "GoAPI/utils"
 
 		"github.com/joho/godotenv"
 )
 
 var geminiURL string
 var geminiAPIKey string
+
+const geminiPrompt=utils.Prompt;
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -67,7 +70,7 @@ func NewGeminiRequester() abstract.CreateChattingInformation {
 }
 
 func (g *GeminiRequester) CreateChattingInformation(talkingText vo.TalkingText, emotionalParam vo.ImotionalParam) (vo.ChattingInformation, error) {
-    prompt := "次のテキストと感情に基づいて、彼女のような話し方で、似た雰囲気のテキストを生成してください。\n\n" +
+    prompt := geminiPrompt+"\n\n" +
         "テキスト: " + talkingText.Value() + "\n" +
         "感情: " + emotionalParam.Value()
 
