@@ -4,6 +4,7 @@ import (
 	abstract "GoAPI/internal/app/core/domain/service/interface"
 	"GoAPI/internal/app/core/domain/model/factory"
 	"GoAPI/internal/app/core/dto"
+	"fmt"
 )
 
 type CreateVoiceUsecaseImpl struct {
@@ -50,6 +51,8 @@ func (c *CreateVoiceUsecaseImpl) CreateVoice(voiceDataDTO dto.VoiceDataDTO) (*dt
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Print("responseChattingInformation", responseChattingInformation)
 	println(3)
 	// 4. Create the voice (WAV) from ChattingInformation
 	audioData, err := c.createVoiceService.CreateVoice(responseChattingInformation)
@@ -57,6 +60,7 @@ func (c *CreateVoiceUsecaseImpl) CreateVoice(voiceDataDTO dto.VoiceDataDTO) (*dt
 		return nil, err
 	}
 	println(4)
+	fmt.Println("audioData", audioData);
 
 	return &audioData, nil
 }

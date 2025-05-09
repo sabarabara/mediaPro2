@@ -14,19 +14,20 @@ import (
 		"github.com/joho/godotenv"
 )
 
+var geminiURL string
+var geminiAPIKey string
+
 func init() {
 	if err := godotenv.Load(); err != nil {
 			panic("Error loading .env file")
 	}
+    geminiAPIKey = os.Getenv("Gemini_API_KEY")
+    geminiURL = os.Getenv("Gemini_API_URL")
 
-	if os.Getenv("Gemini_API_URL") == "" || os.Getenv("Gemini_API_KEY") == "" {
-			panic("Gemini API URL or API Key is not set")
-	}
+    println("Gemini API Key:", geminiAPIKey)
+    println("Gemini API URL:", geminiURL)
 }
 
-
-var geminiURL = os.Getenv("Gemini_API_URL")
-var geminiAPIKey = os.Getenv("Gemini_API_KEY")
 
 
 type GeminiRequester struct{}

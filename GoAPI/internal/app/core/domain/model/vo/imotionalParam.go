@@ -16,7 +16,8 @@ func (e ImotionalParam) Value() string {
 // 正しいコンストラクタ
 func NewImotionalParam(value string) (ImotionalParam, error) {
 	allowedEmotions := []string{
-		"joy", "sadness", "anger", "fear", "surprise", "disgust", "neutral",
+		"joy", "sadness", "anger", "fear", "surprise", "disgust", "neutral","happy",
+		"angry", "sad", "fearful", "surprised", "disgusted", "neutral",
 	}
 
 	// 感情が許可されたリストに含まれているかチェック

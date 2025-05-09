@@ -186,6 +186,8 @@ func (v *VoiceAnalyzer) AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.Chatting
 		return vo.ChattingInformation{}, err
 	}
 
+    println("Received from Flask:", result.Text, result.Emotion)
+
 	// 5. Convert to vo.ChattingInformation
 	talkingText, err := vo.NewTalkingText(result.Text)
 	if err != nil {
@@ -195,6 +197,7 @@ func (v *VoiceAnalyzer) AnalyzeVoice(voiceDataDTO dto.VoiceDataDTO) (vo.Chatting
 	if err != nil {
 		return vo.ChattingInformation{}, err
 	}
+
 
 	return vo.ChattingInformation{
 		TalkingText:    talkingText,

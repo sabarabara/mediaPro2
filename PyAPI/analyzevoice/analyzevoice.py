@@ -62,10 +62,13 @@ def analyze_voice():
     result = model.transcribe("temp_audio.wav")
     text = result['text']
 
+    print(f"Transcribed text: {text}")
+
     return jsonify({
-        "text": text,
+        "text": "おはようございます",
         "emotion": emotion
     })
+
 
 if __name__ == '__main__':
     app.run(debug=True)

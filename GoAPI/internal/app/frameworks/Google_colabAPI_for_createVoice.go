@@ -13,15 +13,14 @@ import (
     "github.com/joho/godotenv"
 )
 
+var flaskServerURL2 string
+
 func init() {
-	if err := godotenv.Load(); err != nil {
-			panic("Error loading .env file")
-	}
+    if err := godotenv.Load(); err != nil {
+        panic("Error loading .env file")
+    }
+    flaskServerURL2 = os.Getenv("Python_API_PORT_FOR_CREATE")
 }
-
-
-// FlaskサーバーのURL
-var flaskServerURL2 = os.Getenv("Python_API_PORT_FOR_CREATE")
 
 
 type VoiceCreater struct{}
@@ -35,28 +34,35 @@ func NewCreateVoiceService() abstract.CreateVoiceService {
 
 func (v *VoiceCreater) CreateVoice(chattingInfo vo.ChattingInformation) (dto.VoiceDataDTO, error) {
     // 例として、ChattingInformationを使ってリクエストを生成
+
+    fmt.Println(1.2);
+
     text := chattingInfo.TalkingText.Value()  // ここでTalkingTextを取得
     emotion := chattingInfo.ImotionalParam.Value()  // ここでImotionalParamを取得
 
-    // createVoiceエンドポイントのURL
-    url := flaskServerURL2
 
     // リクエストデータをJSONに変換
-    data := map[string]string{
-        "text":    text,
-        "emotion": emotion,
-    }
+
+     data := map[string]string{
+            "talkingText":     text,
+            "emotionalParam":  emotion,
+        }
     jsonData, err := json.Marshal(data)
     if err != nil {
         return dto.VoiceDataDTO{}, err
     }
 
+    fmt.Println("jsonData", string(jsonData))
+    fmt.Println(1.3);
     // POSTリクエストの送信
-    resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+    resp, err := http.Post(flaskServerURL2, "application/json", bytes.NewBuffer(jsonData))
     if err != nil {
         return dto.VoiceDataDTO{}, err
     }
     defer resp.Body.Close()
+
+    fmt.Println("resp", resp)
+    fmt.Println(1.4);
 
     // レスポンスコードチェック
     if resp.StatusCode != http.StatusOK {
@@ -69,6 +75,7 @@ func (v *VoiceCreater) CreateVoice(chattingInfo vo.ChattingInformation) (dto.Voi
         return dto.VoiceDataDTO{}, err
     }
 
+    fmt.Println(1.5);
     // 音声データをVoiceDataDTOに格納して返す
     return dto.VoiceDataDTO{
         AudioData: body, // ここでレスポンスの音声データを返す

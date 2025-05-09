@@ -1,57 +1,55 @@
 from flask import Flask, request, jsonify, send_file
-import pyttsx3
-import audioread
-import numpy as np
+from gtts import gTTS
+import subprocess
 from io import BytesIO
-import tempfile
-import os
+import traceback
 
 app = Flask(__name__)
 
 def create_voice(talking_text: str, emotional_param: str) -> BytesIO:
-    # TTSエンジン初期化
-    engine = pyttsx3.init()
+    # 1) gTTS で MP3 を生成
+    mp3_buf = BytesIO()
+    gTTS(text=talking_text, lang='ja').write_to_fp(mp3_buf)
+    mp3_buf.seek(0)
 
-    # 話速設定（emotional_paramに応じた速度）
-    if emotional_param == "happy":
-        engine.setProperty('rate', 150)
-    elif emotional_param == "sad":
-        engine.setProperty('rate', 100)
-    else:
-        engine.setProperty('rate', 125)
+    # 2) FFmpeg CLI で MP3 → WAV に変換
+    #    stdin: mp3_buf、 stdout: wav_buf
+    wav_buf = BytesIO()
+    ffmpeg_cmd = [
+        'ffmpeg', '-i', 'pipe:0',    # 標準入力から読む
+        '-f', 'wav',                 # フォーマット WAV
+        'pipe:1'                     # 標準出力へ書く
+    ]
+    proc = subprocess.run(
+        ffmpeg_cmd,
+        input=mp3_buf.read(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL  # 進捗ログは捨てる
+    )
+    wav_buf.write(proc.stdout)
+    wav_buf.seek(0)
 
-    # 一時ファイルに出力（pyttsx3はファイル保存しかできない）
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmpfile:
-        tmp_path = tmpfile.name
-    
-    try:
-        engine.save_to_file(talking_text, tmp_path)
-        engine.runAndWait()
-
-        # 音声データをメモリに読み込む
-        audio_output = BytesIO()
-        with open(tmp_path, 'rb') as f:
-            audio_output.write(f.read())
-        audio_output.seek(0)
-        return audio_output
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+    return wav_buf
 
 @app.route('/createVoice', methods=['POST'])
 def handle_create_voice():
     try:
         data = request.get_json()
         if not data or 'talkingText' not in data or 'emotionalParam' not in data:
-            return jsonify({"error": "Invalid input: talkingText and emotionalParam are required"}), 400
+            return jsonify({"error": "Invalid input"}), 400
 
-        talking_text = data['talkingText']
-        emotional_param = data['emotionalParam']
-
-        audio_output = create_voice(talking_text, emotional_param)
-
-        return send_file(audio_output, mimetype='audio/wav', as_attachment=True, download_name="output.wav")
+        wav_output = create_voice(
+            talking_text=data['talkingText'],
+            emotional_param=data['emotionalParam']
+        )
+        return send_file(
+            wav_output,
+            mimetype='audio/wav',
+            as_attachment=True,
+            download_name="output.wav"
+        )
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

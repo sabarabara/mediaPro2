@@ -10,7 +10,7 @@ const Home = () => {
 
   // WebSocket接続を確立
   const connectWebSocket = () => {
-    const socket = new WebSocket('//localhost:8080/ws'); // WebSocketのURLを調整
+    const socket = new WebSocket('ws//localhost:8080/ws'); // WebSocketのURLを調整
     socket.binaryType = "arraybuffer"; // 重要！！ バイナリデータを受信できるようにする
 
     socket.onopen = () => {
@@ -24,10 +24,13 @@ const Home = () => {
       // 受け取ったArrayBufferをBlobに変換
       const audioBlob = new Blob([event.data], { type: 'audio/wav' });
 
+      console.log('音声データ:', audioBlob);
       // BlobをURLにしてAudioタグで再生
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      console.log('音声URL:', audioUrl);
       audio.play();
+      console.log('音声再生OK');
     };
 
     socket.onerror = (error) => {
