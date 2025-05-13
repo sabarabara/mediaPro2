@@ -49,6 +49,7 @@ def analyze_voice():
     file = request.files['file']
     audio_data = file.read()
 
+    print(len(audio_data))
     # 感情推定
     emotion = estimate_emotion(audio_data)
 
@@ -65,7 +66,7 @@ def analyze_voice():
     print(f"Transcribed text: {text}")
 
     return jsonify({
-        "text": "おはようございます",
+        "text": text,
         "emotion": emotion
     })
 

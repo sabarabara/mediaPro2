@@ -1,13 +1,15 @@
 package controllers
 
 import (
-	abstract "GoAPI/internal/app/core/domain/service/interface"
-	"GoAPI/internal/app/core/dto"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+
+	abstract "GoAPI/internal/app/core/domain/service/interface"
+	"GoAPI/internal/app/core/dto"
 )
 
 type CreateVoiceController struct {
@@ -22,14 +24,11 @@ func NewCreateVoiceController(creatingVoiceUsecase abstract.CreateVoiceUsecase) 
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// 任意でOriginをチェック（必要に応じて変更）
 		return true
 	},
 }
 
-// WebSocket接続を処理するハンドラ
 func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
-	// WebSocket接続のアップグレード
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println("Error upgrading connection:", err)
@@ -38,29 +37,60 @@ func (c *CreateVoiceController) HandleWebSocket(ctx *gin.Context) {
 	defer conn.Close()
 	log.Println("WebSocket connection established")
 
-	// 音声データの受信と処理
+	// 3秒バッファ用
+	var voiceBuffer []byte
+	ticker := time.NewTicker(6 * time.Second)
+	defer ticker.Stop()
+
+	// メッセージ受信用チャネル
+	messageChan := make(chan []byte)
+
+	// 非同期で受信処理
+	go func() {
+		for {
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("Error reading message:", err)
+				close(messageChan)
+				return
+			}
+			messageChan <- msg
+		}
+	}()
+
 	for {
-    _, msg, err := conn.ReadMessage()
-    if err != nil {
-        log.Println("Error reading message:", err)
-        return
-    }
+		select {
+		case msg, ok := <-messageChan:
+			if !ok {
+				return
+			}
+			voiceBuffer = append(voiceBuffer, msg...)
 
-    voiceDataDTO := dto.VoiceDataDTO{
-        AudioData: msg,
-    }
+		case <-ticker.C:
+			if len(voiceBuffer) == 0 {
+				continue
+			}
 
-    resAudioData, err := c.creatingVoiceUsecase.CreateVoice(voiceDataDTO)
-    if err != nil {
-        log.Println("Error processing voice data:", err)
-        return
-    }
+			log.Println("Sending buffered audio data of length:", len(voiceBuffer))
 
-    // ★ JSONじゃなくてバイナリ送信 ★
-    err = conn.WriteMessage(websocket.BinaryMessage, resAudioData.AudioData)
-    if err != nil {
-        log.Println("Error sending response:", err)
-        return
-    }
-}
+			voiceDataDTO := dto.VoiceDataDTO{
+				AudioData: voiceBuffer,
+			}
+
+			resAudioData, err := c.creatingVoiceUsecase.CreateVoice(voiceDataDTO)
+			if err != nil {
+				log.Println("Error processing voice data:", err)
+				return
+			}
+
+			err = conn.WriteMessage(websocket.BinaryMessage, resAudioData.AudioData)
+			if err != nil {
+				log.Println("Error sending response:", err)
+				return
+			}
+
+			// バッファをリセット
+			voiceBuffer = nil
+		}
+	}
 }

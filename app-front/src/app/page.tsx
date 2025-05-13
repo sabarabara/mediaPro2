@@ -5,13 +5,13 @@ import React, { useState, useRef } from 'react';
 const Home = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // WebSocket接続を確立
   const connectWebSocket = () => {
-    const socket = new WebSocket('//localhost:8080/ws'); // WebSocketのURLを調整
-    socket.binaryType = "arraybuffer"; // 重要！！ バイナリデータを受信できるようにする
+    const socket = new WebSocket('ws://localhost:8080/ws');
+    socket.binaryType = "arraybuffer";
 
     socket.onopen = () => {
       console.log('WebSocket connection established');
@@ -20,21 +20,14 @@ const Home = () => {
 
     socket.onmessage = (event) => {
       console.log('音声データ受信');
-
-      // 受け取ったArrayBufferをBlobに変換
       const audioBlob = new Blob([event.data], { type: 'audio/wav' });
-
-      console.log('音声データ:', audioBlob);
-      // BlobをURLにしてAudioタグで再生
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      console.log('音声URL:', audioUrl);
       audio.play();
-      console.log('音声再生OK');
     };
 
     socket.onerror = (error) => {
-      console.log('WebSocket error:', error);
+      console.error('WebSocket error:', error);
     };
 
     socket.onclose = () => {
@@ -42,51 +35,56 @@ const Home = () => {
     };
   };
 
-  // 録音開始
-  const startRecording = () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => {
-          mediaRecorderRef.current = new MediaRecorder(stream);
-          mediaRecorderRef.current.ondataavailable = (event) => {
-            setAudioChunks((prevChunks) => [...prevChunks, event.data]);
-          };
-          mediaRecorderRef.current.start();
-          setIsRecording(true);
-        })
-        .catch((err) => {
-          console.error('録音開始エラー:', err);
-        });
-    } else {
-      console.error('音声録音機能はこのブラウザではサポートされていません。');
+  const startRecording = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('音声録音非対応のブラウザです');
+      return;
     }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    streamRef.current = stream;
+
+    const audioContext = new AudioContext({ sampleRate: 16000 });
+    audioContextRef.current = audioContext;
+
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    processorRef.current = processor;
+
+    processor.onaudioprocess = (e) => {
+      const floatData = e.inputBuffer.getChannelData(0);
+      const int16Data = convertFloat32ToInt16(floatData);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(int16Data.buffer);
+      }
+    };
+
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+
+    setIsRecording(true);
   };
 
-  // 録音停止
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    processorRef.current?.disconnect();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    audioContextRef.current?.close();
 
-      // 録音データをBlobとして統合
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    setIsRecording(false);
+  };
 
-      // 録音した音声をWebSocketで送信
-      if (ws) {
-        audioBlob.arrayBuffer().then(buffer => {
-          ws.send(buffer); // ArrayBufferで送信
-          console.log('音声ファイルを送信しました');
-        });
-      }
-
-      // 録音データをリセット
-      setAudioChunks([]);
+  const convertFloat32ToInt16 = (buffer: Float32Array): Int16Array => {
+    const int16 = new Int16Array(buffer.length);
+    for (let i = 0; i < buffer.length; i++) {
+      const s = Math.max(-1, Math.min(1, buffer[i]));
+      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
+    return int16;
   };
 
   return (
     <div>
-      <h1>音声録音と送信（リアルタイム再生）</h1>
+      <h1>音声録音と送信（PCM形式）</h1>
       <button onClick={connectWebSocket}>WebSocket接続</button>
       <button onClick={startRecording} disabled={isRecording}>録音開始</button>
       <button onClick={stopRecording} disabled={!isRecording}>録音停止</button>
